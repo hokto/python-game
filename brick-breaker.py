@@ -1,5 +1,7 @@
 import sys
 import pygame
+import random
+import math
 from pygame.locals import *
 
 
@@ -11,10 +13,15 @@ BRICK_X_NUM = 10 # ブロックの横方向の個数
 BRICK_HEIGHT = 15 # ブロックの縦幅
 BRICK_WIDTH = 35 # ブロックの横幅
 
-RACKET_DIF_X = 10
+RACKET_DIF_X = 10 # ラケットの移動速度
+SPEED_X = 5 # x軸方向の基準の移動速度 
+SPEED_Y = 8 # y軸方向の基準の移動速度
 
 existing_brick = pygame.sprite.Group() # 存在しているブロックのグループ
 racket = None
+
+is_clear = False
+is_gameover = False
 
 # ブロック用のクラス
 # Spriteクラスを継承して扱いやすくする
@@ -55,6 +62,61 @@ class Ball(pygame.sprite.Sprite):
         
         self.bricks = bricks
         self.racket = racket
+        
+        self.update = self.setup
+        
+    def setup(self):
+        # ランダムで最初にボールの進む方向を決める
+        self.speed_x = random.randint(-1,1) * SPEED_X
+        self.speed_y = -SPEED_Y
+        
+        self.update = self.move
+        
+    def move(self):
+        self.rect.centerx += self.speed_x
+        self.rect.centery += self.speed_y
+        # 左右の壁に衝突したらx軸の進む方向を反転
+        if self.rect.left < SURFACE.left or self.rect.right > SURFACE.right:
+            self.speed_x *= -1
+            
+        # 天井に届いたらy軸の進む方向を反転
+        if self.rect.top < SURFACE.top:
+            self.speed_y *= -1
+            
+        # 一番下まで落ちたらその時点でゲームオーバー
+        if self.rect.bottom > SURFACE.bottom:
+            global is_gameover
+            is_gameover = True
+            return
+        
+        # 衝突判定
+        collide_briks = pygame.sprite.spritecollide(sprite=self,group=self.bricks,dokill=True)
+        
+        # 衝突したものがあるなら、ボールの進む向きを再計算
+        if(len(collide_briks)>0):
+            # ベクトル計算
+            dir_x = self.rect.centerx - collide_briks[0].rect.centerx
+            dir_y = self.rect.centery - collide_briks[0].rect.centery
+            
+            # ベクトル正規化 
+            nor_dir_x = dir_x / math.sqrt(dir_x**2+dir_y**2)
+            nor_dir_y = dir_y / math.sqrt(dir_x**2+dir_y**2)
+            
+            self.speed_x = nor_dir_x * SPEED_X
+            self.speed_y = nor_dir_y * SPEED_Y
+
+        # 衝突判定し、ラケットと衝突していたら進む方向を再計算
+        if(self.rect.colliderect(self.racket.rect)):
+            # ベクトル計算
+            dir_x = self.rect.centerx - self.racket.rect.centerx
+            dir_y = self.rect.centery - self.racket.rect.centery
+            
+            # ベクトル正規化 
+            nor_dir_x = dir_x / math.sqrt(dir_x**2+dir_y**2)
+            nor_dir_y = dir_y / math.sqrt(dir_x**2+dir_y**2)
+            
+            self.speed_x = nor_dir_x * SPEED_X
+            self.speed_y = nor_dir_y * SPEED_Y
     def draw(self,surface):
         surface.blit(self.image,self.rect)
         
@@ -79,7 +141,7 @@ def main():
     init() 
     
     racket =  Racket(200,500,100,10)
-    ball = Ball(200,505,5,existing_brick,racket)
+    ball = Ball(200,500-10,5,existing_brick,racket)
     
     clock = pygame.time.Clock()
     while True:
@@ -106,6 +168,13 @@ def main():
                     racket.x -= RACKET_DIF_X
                 if event.key == K_RIGHT:
                     racket.x += RACKET_DIF_X
+        
+        if is_gameover:
+            print("Debug:GameOver")
+            exit()
+        if is_clear:
+            print("Debug:Clear")
+            exit()
                 
                 
 
