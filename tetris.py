@@ -18,7 +18,9 @@ COLOR = {
     "Blue":(0,0,255,),
     "LightBlue":(0,255,255),
     "Yellow":(255,255,0),
-    "Orange":(255,130,0)}
+    "Orange":(255,130,0),
+    "LightGray":(150,150,150),
+    "Gray":(50,50,50)}
 
 # ゲーム終了関数
 def game_exit():
@@ -31,7 +33,7 @@ def main():
     while True:
         surface.fill(COLOR["Black"])
         # ステップ1:四角形の描画
-        pygame.draw.rect(surface,COLOR["Orange"],(100,100,BLOCK_SIZE,BLOCK_SIZE))
+        pygame.draw.rect(surface,COLOR["LightGray"],(100,100,BLOCK_SIZE,BLOCK_SIZE))
         pygame.display.update()
         pressed_keys = pygame.key.get_pressed() # 押されたキー情報を取得
         for event in pygame.event.get():
