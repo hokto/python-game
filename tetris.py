@@ -10,12 +10,16 @@ from pygame.locals import *
 
 ROW = 20
 COL = 10
-HEIGHT = 580
-WIDTH = 720
+WINDOW_HEIGHT = 580
+WINDOW_WIDTH = 720
+
+BOARD_X = 200
+BOARD_Y = 150
 BLOCK_SIZE = 15
-SURFACE = Rect(0,0,WIDTH,HEIGHT) # 画面のサイズ(x座標,y座標,幅,高さ)
+SURFACE = Rect(0,0,WINDOW_WIDTH,WINDOW_HEIGHT) # 画面のサイズ(x座標,y座標,幅,高さ)
 COLOR = {
     "Black":(0,0,0),
+    "LightBlack":(20,20,20),
     "Red":(255,0,0),
     "Green":(0,255,0),
     "Blue":(0,0,255,),
@@ -26,7 +30,7 @@ COLOR = {
     "Gray":(50,50,50)
     }
 BLOCK_COLOR =[
-    "Black",
+    "LightBlack",
     "LightGray",
     "LightBlue",
     "Blue",
@@ -57,8 +61,15 @@ class Block:
         self.col = col
     def draw(self,surface):
         for block in self.shape:
-            pygame.draw.rect(surface,COLOR[BLOCK_COLOR[self.block_type]],Rect((self.col+block[1])*BLOCK_SIZE,(self.row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
+                pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE,BOARD_Y+(self.row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
+                pygame.draw.rect(surface,COLOR[BLOCK_COLOR[self.block_type]],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE+1,BOARD_Y+(self.row+block[0])*BLOCK_SIZE+1,BLOCK_SIZE-3,BLOCK_SIZE-3))
         
+# 盤面の描画
+def board_draw(surface,board):
+    for row in range(ROW+3):
+        for col in range(COL+2):
+            pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+col*BLOCK_SIZE,BOARD_Y+row*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
+            pygame.draw.rect(surface,COLOR[BLOCK_COLOR[board[row][col]]],Rect(BOARD_X+col*BLOCK_SIZE+1,BOARD_Y+row*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2))
 # ゲーム終了関数
 def game_exit():
     pygame.quit()
@@ -76,10 +87,7 @@ def main():
         board[row][-1] = 1
     while True:
         surface.fill(COLOR["Black"])
-        for row in range(ROW+3):
-            for col in range(COL+2):
-                pygame.draw.rect(surface,COLOR[BLOCK_COLOR[board[row][col]]],Rect(col*BLOCK_SIZE,row*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
-                
+        board_draw(surface,board) 
         block.draw(surface)
         pygame.display.update()
         pressed_keys = pygame.key.get_pressed() # 押されたキー情報を取得
