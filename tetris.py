@@ -12,7 +12,7 @@ ROW = 20
 COL = 10
 WINDOW_HEIGHT = 580
 WINDOW_WIDTH = 720
-
+FPS = 60
 BOARD_X = 200
 BOARD_Y = 150
 BLOCK_SIZE = 15
@@ -60,6 +60,8 @@ class Block:
         ]
         self.block_type = block_type
         self.shape = copy.deepcopy(self.shapes[self.block_type]) # こうしないと元の配列も変化する(参照コピー)
+        self.drop_rate = 60 # 落ちてから固定化されるまでの時間([1/s])
+        self.count = 60
         self.row = row
         self.col = col
     def draw(self,surface):
@@ -81,6 +83,19 @@ class Block:
         if self.movable(direction,board):
             self.row += drow
             self.col += dcol
+    def drop(self,board):
+        if self.count < self.drop_rate:
+            self.count += 1
+        elif self.movable([1,0],board):
+            self.move([1,0],board)
+            self.count = 0
+        else:
+            self.setting_board(board)
+    def setting_board(self,board):
+        for block in self.shape:
+            row = self.row + block[0]
+            col = self.col + block[1]
+            board[row][col] = self.block_type
 # 盤面の描画
 def board_draw(surface,board):
     for row in range(ROW+3):
@@ -94,6 +109,7 @@ def game_exit():
 # メイン関数
 def main():
     pygame.init()
+    clock = pygame.time.Clock()
     surface = pygame.display.set_mode(SURFACE.size)
     block = Block(4,1,5)
     board = [[0 for j in range(COL+2)] for i in range(ROW+3)]
@@ -103,11 +119,8 @@ def main():
         board[row][0] = 1
         board[row][-1] = 1
     while True:
+        clock.tick(FPS)
         surface.fill(COLOR["Black"])
-        board_draw(surface,board) 
-        block.draw(surface)
-        pygame.display.update()
-        # ステップ3:ピースの移動
         # イベント状態を取得
         for event in pygame.event.get():
             # ウィンドウのバツボタンを押した時
@@ -121,6 +134,11 @@ def main():
                 # Escキーを押した時
                 if event.key == K_ESCAPE:
                     game_exit()
+        # ステップ4: ピースの落下と固定化
+        block.drop(board)
+        board_draw(surface,board) 
+        block.draw(surface)
+        pygame.display.update()
 
 if __name__=="__main__":
     main()
