@@ -41,7 +41,10 @@ BLOCK_COLOR =[
     "Gray"
 ]
 
-# ステップ2:枠とピースの描画
+def is_between(row,col):
+    if 0 < col and col <= COL and 0 <= row and row <= ROW+2:
+        return True
+    return False
 class Block:
     def __init__(self,block_type,row,col):
         self.shapes = [
@@ -63,7 +66,21 @@ class Block:
         for block in self.shape:
                 pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE,BOARD_Y+(self.row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
                 pygame.draw.rect(surface,COLOR[BLOCK_COLOR[self.block_type]],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE+1,BOARD_Y+(self.row+block[0])*BLOCK_SIZE+1,BLOCK_SIZE-3,BLOCK_SIZE-3))
-        
+    
+    def movable(self,direction,board):
+        drow,dcol = direction
+        for coor in self.shape:
+            row = self.row + drow + coor[0]
+            col = self.col + dcol + coor[1]
+            if not is_between(row,col) or board[row][col]!=0:
+                return False
+        return True
+
+    def move(self,direction,board):
+        drow,dcol = direction
+        if self.movable(direction,board):
+            self.row += drow
+            self.col += dcol
 # 盤面の描画
 def board_draw(surface,board):
     for row in range(ROW+3):
@@ -90,15 +107,20 @@ def main():
         board_draw(surface,board) 
         block.draw(surface)
         pygame.display.update()
-        pressed_keys = pygame.key.get_pressed() # 押されたキー情報を取得
+        # ステップ3:ピースの移動
+        # イベント状態を取得
         for event in pygame.event.get():
             # ウィンドウのバツボタンを押した時
             if event.type == QUIT:
                 game_exit()
-        # Escキーを押した時
-        if pressed_keys[K_ESCAPE]:
-            game_exit()
-                
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    block.move([0,-1],board)
+                if event.key == K_RIGHT:
+                    block.move([0,1],board)
+                # Escキーを押した時
+                if event.key == K_ESCAPE:
+                    game_exit()
 
 if __name__=="__main__":
     main()
