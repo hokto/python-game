@@ -96,6 +96,24 @@ class Block:
             row = self.row + block[0]
             col = self.col + block[1]
             board[row][col] = self.block_type
+    # ステップ4: ピースの回転
+    # [x,y] = [ cos(90) sin(90)
+    #           -sin(90) cos(90)] * [x,y]
+    #       = [y,-x]
+    def rotate(self,board):
+        for block in self.shape:
+            dcol = block[0]
+            drow = -block[1]
+            row = self.row + drow
+            col = self.col + dcol
+            if not is_between(row,col) or board[row][col]!=0:
+                return
+        for i in range(4):
+            row = self.shape[i][0]
+            col = self.shape[i][1]
+            self.shape[i][0] = -col
+            self.shape[i][1] = row
+        
 # 盤面の描画
 def board_draw(surface,board):
     for row in range(ROW+3):
@@ -131,6 +149,8 @@ def main():
                     block.move([0,-1],board)
                 if event.key == K_RIGHT:
                     block.move([0,1],board)
+                if event.key == K_a:
+                    block.rotate(board)
                 # Escキーを押した時
                 if event.key == K_ESCAPE:
                     game_exit()
