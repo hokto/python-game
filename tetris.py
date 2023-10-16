@@ -139,7 +139,7 @@ def board_draw(surface,board):
         for col in range(COL+2):
             pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+col*BLOCK_SIZE,BOARD_Y+row*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
             pygame.draw.rect(surface,COLOR[BLOCK_COLOR[board[row][col]]],Rect(BOARD_X+col*BLOCK_SIZE+1,BOARD_Y+row*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2))
-# ステップ6:行の削除
+# 行の削除
 def row_delete(board):
     deleted_row_list = []
     for row in range(1,ROW+2):
@@ -161,6 +161,13 @@ def row_delete(board):
         for col in range(1,COL+1):
             board[0][col] = 0
             
+# ステップ7:ゲーム終了条件
+# ゲームオーバー判定
+def is_gameover(board,block):
+    if not block.movable([0,0],board):
+        return True
+    return False
+
 # ゲーム終了関数
 def game_exit():
     pygame.quit()
@@ -185,6 +192,10 @@ def main():
         if not block:
             block = copy.deepcopy(next_block)
             next_block = Block(random.randint(2,8),1,5)
+        # ステップ7:ゲーム終了条件
+        if is_gameover(board,block):
+            print("GAMEOVER")
+            game_exit()
         # イベント状態を取得
         for event in pygame.event.get():
             # ウィンドウのバツボタンを押した時
