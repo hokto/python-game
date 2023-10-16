@@ -27,7 +27,8 @@ COLOR = {
     "Yellow":(255,255,0),
     "Orange":(255,130,0),
     "LightGray":(150,150,150),
-    "Gray":(50,50,50)
+    "Gray":(50,50,50),
+    "White" : (255,255,255)
     }
 BLOCK_COLOR =[
     "LightBlack",
@@ -64,11 +65,17 @@ class Block:
         self.count = 60
         self.row = row
         self.col = col
+        self.bottom_row = self.row
+        self.bottom_col = self.col
     def draw(self,surface):
+        for block in self.shape:
+                pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+(self.bottom_col+block[1])*BLOCK_SIZE,BOARD_Y+(self.bottom_row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
+                pygame.draw.rect(surface,COLOR["White"],Rect(BOARD_X+(self.bottom_col+block[1])*BLOCK_SIZE+1,BOARD_Y+(self.bottom_row+block[0])*BLOCK_SIZE+1,BLOCK_SIZE-3,BLOCK_SIZE-3))
+
         for block in self.shape:
                 pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE,BOARD_Y+(self.row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
                 pygame.draw.rect(surface,COLOR[BLOCK_COLOR[self.block_type]],Rect(BOARD_X+(self.col+block[1])*BLOCK_SIZE+1,BOARD_Y+(self.row+block[0])*BLOCK_SIZE+1,BLOCK_SIZE-3,BLOCK_SIZE-3))
-    
+
     def movable(self,direction,board):
         drow,dcol = direction
         for coor in self.shape:
@@ -83,6 +90,7 @@ class Block:
         if self.movable(direction,board):
             self.row += drow
             self.col += dcol
+        self.drop_pred(board) # 落下位置予測の更新
     def drop(self,board):
         if self.count < self.drop_rate:
             self.count += 1
@@ -96,14 +104,13 @@ class Block:
             row = self.row + block[0]
             col = self.col + block[1]
             board[row][col] = self.block_type
-    # ステップ4: ピースの回転
-    # [x,y] = [ cos(90) sin(90)
-    #           -sin(90) cos(90)] * [x,y]
-    #       = [y,-x]
-    def rotate(self,board):
+    def rotate(self,board,is_inverse=False):
         for block in self.shape:
             dcol = block[0]
             drow = -block[1]
+            if is_inverse:
+                dcol *= -1
+                drow *= -1
             row = self.row + drow
             col = self.col + dcol
             if not is_between(row,col) or board[row][col]!=0:
@@ -113,7 +120,17 @@ class Block:
             col = self.shape[i][1]
             self.shape[i][0] = -col
             self.shape[i][1] = row
-        
+        self.drop_pred(board) # 落下位置予測の更新
+    def drop_pred(self,board):
+        tmp_row = self.row
+        while True:
+            if not self.movable([1,0],board):
+                break
+            self.row += 1
+        self.bottom_row = self.row
+        self.bottom_col = self.col
+        self.row = tmp_row
+
 # 盤面の描画
 def board_draw(surface,board):
     for row in range(ROW+3):
@@ -149,14 +166,18 @@ def main():
                     block.move([0,-1],board)
                 if event.key == K_RIGHT:
                     block.move([0,1],board)
+                if event.key == K_DOWN:
+                    block.move([1,0],board)
                 if event.key == K_a:
                     block.rotate(board)
+                if event.key == K_r:
+                    block.rotate(board,is_inverse=True)
                 # Escキーを押した時
                 if event.key == K_ESCAPE:
                     game_exit()
         # ステップ4: ピースの落下と固定化
         block.drop(board)
-        board_draw(surface,board) 
+        board_draw(surface,board)
         block.draw(surface)
         pygame.display.update()
 
