@@ -139,6 +139,28 @@ def board_draw(surface,board):
         for col in range(COL+2):
             pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+col*BLOCK_SIZE,BOARD_Y+row*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
             pygame.draw.rect(surface,COLOR[BLOCK_COLOR[board[row][col]]],Rect(BOARD_X+col*BLOCK_SIZE+1,BOARD_Y+row*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2))
+# ステップ6:行の削除
+def row_delete(board):
+    deleted_row_list = []
+    for row in range(1,ROW+2):
+        is_full = True # 行全てが埋まっているかどうかの判定
+        for col in range(1,COL+1):
+            if board[row][col] == 0:
+                is_full = False
+                break
+        if is_full:
+            deleted_row_list.append(row)
+            for col in range(1,COL+1):
+                board[row][col] = 0
+    if not deleted_row_list:
+        return
+    for trow in deleted_row_list:
+        for row in range(trow,1,-1):
+            for col in range(1,COL+1):
+                board[row][col] = board[row-1][col]
+        for col in range(1,COL+1):
+            board[0][col] = 0
+            
 # ゲーム終了関数
 def game_exit():
     pygame.quit()
@@ -149,7 +171,7 @@ def main():
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode(SURFACE.size)
     block = None # 現在落下してくるブロックの情報
-    next_block = Block(random.randint(2,9),1,5) # 次に落下してくるブロックの情報
+    next_block = Block(random.randint(2,8),1,5) # 次に落下してくるブロックの情報
     board = [[0 for j in range(COL+2)] for i in range(ROW+3)]
     for col in range(COL+2):
         board[-1][col] = 1
@@ -162,7 +184,7 @@ def main():
         # blockがNoneだった場合, 新しいブロックを作成
         if not block:
             block = copy.deepcopy(next_block)
-            next_block = Block(random.randint(2,9),1,5)
+            next_block = Block(random.randint(2,8),1,5)
         # イベント状態を取得
         for event in pygame.event.get():
             # ウィンドウのバツボタンを押した時
@@ -183,6 +205,7 @@ def main():
                 if event.key == K_ESCAPE:
                     game_exit()
         block.drop(board)
+        row_delete(board)
         board_draw(surface,board)
         block.draw(surface)
         pygame.display.update()
