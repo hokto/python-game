@@ -67,6 +67,7 @@ class Block:
         self.col = col
         self.bottom_row = self.row
         self.bottom_col = self.col
+        self.is_dropped = False # 完全に落下したかどうかを表す変数
     def draw(self,surface):
         for block in self.shape:
                 pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+(self.bottom_col+block[1])*BLOCK_SIZE,BOARD_Y+(self.bottom_row+block[0])*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
@@ -99,6 +100,7 @@ class Block:
             self.count = 0
         else:
             self.setting_board(board)
+            self.is_dropped = True # 完全に落下したことを示す
     def setting_board(self,board):
         for block in self.shape:
             row = self.row + block[0]
@@ -146,7 +148,8 @@ def main():
     pygame.init()
     clock = pygame.time.Clock()
     surface = pygame.display.set_mode(SURFACE.size)
-    block = Block(4,1,5)
+    block = None # 現在落下してくるブロックの情報
+    next_block = Block(random.randint(2,9),1,5) # 次に落下してくるブロックの情報
     board = [[0 for j in range(COL+2)] for i in range(ROW+3)]
     for col in range(COL+2):
         board[-1][col] = 1
@@ -156,6 +159,10 @@ def main():
     while True:
         clock.tick(FPS)
         surface.fill(COLOR["Black"])
+        # blockがNoneだった場合, 新しいブロックを作成
+        if not block:
+            block = copy.deepcopy(next_block)
+            next_block = Block(random.randint(2,9),1,5)
         # イベント状態を取得
         for event in pygame.event.get():
             # ウィンドウのバツボタンを押した時
@@ -175,11 +182,13 @@ def main():
                 # Escキーを押した時
                 if event.key == K_ESCAPE:
                     game_exit()
-        # ステップ4: ピースの落下と固定化
         block.drop(board)
         board_draw(surface,board)
         block.draw(surface)
         pygame.display.update()
+        # 完全にブロックが落ちたらそのブロック情報を削除
+        if block.is_dropped:
+            block = None
 
 if __name__=="__main__":
     main()
