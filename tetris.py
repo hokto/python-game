@@ -11,7 +11,7 @@ from pygame.locals import *
 ROW = 20
 COL = 10
 WINDOW_HEIGHT = 580
-WINDOW_WIDTH = 720
+WINDOW_WIDTH = 820
 FPS = 60
 BOARD_X = 200
 BOARD_Y = 150
@@ -167,7 +167,7 @@ def is_gameover(board,block):
         return True
     return False
 
-# ステップ8: nextブロックの描画
+# nextブロックの描画
 def draw_next_block(surface,next_block):
     # 白色の枠
     pygame.draw.rect(surface,COLOR["White"],Rect(400,30,150,150))
@@ -185,6 +185,34 @@ def draw_next_block(surface,next_block):
 def game_exit():
     pygame.quit()
     sys.exit()
+
+# ステップ8: holdブロックの実装と描画
+# holdブロックと現在のブロックを交換する
+def hold(block,hold_block):
+    block.row = 1
+    block.col = 5
+    tmp_block = copy.deepcopy(block)
+    block = copy.deepcopy(hold_block)
+    hold_block = tmp_block
+    return block,hold_block
+
+# holdブロックの描画
+def draw_hold_block(surface,hold_block):
+    # 白色の枠
+    pygame.draw.rect(surface,COLOR["White"],Rect(600,30,150,150))
+    # 黒色で白の四角形を塗りつぶす
+    pygame.draw.rect(surface,COLOR["Black"],Rect(605,35,140,140))
+    # 文字を描画する領域を黒に塗りつぶす
+    pygame.draw.rect(surface,COLOR["Black"],Rect(620,30,70,10))
+    font = pygame.font.Font(None,30)
+    text = font.render("HOLD",True,COLOR["White"])
+    surface.blit(text,[630,20])
+    # まだholdされていない場合はブロックを描画しない
+    if not hold_block:
+        return
+    for block in hold_block.shape:
+        pygame.draw.rect(surface,COLOR["Black"],Rect(652+25*block[1],105+25*block[0],25,25))
+        pygame.draw.rect(surface,COLOR[BLOCK_COLOR[hold_block.block_type]],Rect(655+25*block[1],107+25*block[0],21,21))
 # メイン関数
 def main():
     pygame.init()
@@ -192,6 +220,7 @@ def main():
     surface = pygame.display.set_mode(SURFACE.size)
     block = None # 現在落下してくるブロックの情報
     next_block = Block(random.randint(2,8),1,5) # 次に落下してくるブロックの情報
+    hold_block = None # 現在ホールドしているブロックの情報
     board = [[0 for j in range(COL+2)] for i in range(ROW+3)]
     for col in range(COL+2):
         board[-1][col] = 1
@@ -225,12 +254,20 @@ def main():
                     block.rotate(board)
                 if event.key == K_r:
                     block.rotate(board,is_inverse=True)
+                if event.key == K_d:
+                    block,hold_block = hold(block,hold_block)
+                    if not block:
+                        break
                 # Escキーを押した時
                 if event.key == K_ESCAPE:
                     game_exit()
+        # 初めてholdしたときの例外処理
+        if not block:
+            continue
         block.drop(board)
         row_delete(board)
         draw_next_block(surface,next_block)
+        draw_hold_block(surface,hold_block)
         board_draw(surface,board)
         block.draw(surface)
         pygame.display.update()
