@@ -135,7 +135,7 @@ class Block:
 
 # 盤面の描画
 def board_draw(surface,board):
-    for row in range(ROW+3):
+    for row in range(2,ROW+3):
         for col in range(COL+2):
             pygame.draw.rect(surface,COLOR["Black"],Rect(BOARD_X+col*BLOCK_SIZE,BOARD_Y+row*BLOCK_SIZE,BLOCK_SIZE,BLOCK_SIZE))
             pygame.draw.rect(surface,COLOR[BLOCK_COLOR[board[row][col]]],Rect(BOARD_X+col*BLOCK_SIZE+1,BOARD_Y+row*BLOCK_SIZE+1,BLOCK_SIZE-2,BLOCK_SIZE-2))
@@ -161,13 +161,26 @@ def row_delete(board):
         for col in range(1,COL+1):
             board[0][col] = 0
             
-# ステップ7:ゲーム終了条件
 # ゲームオーバー判定
 def is_gameover(board,block):
     if not block.movable([0,0],board):
         return True
     return False
 
+# ステップ8: nextブロックの描画
+def draw_next_block(surface,next_block):
+    # 白色の枠
+    pygame.draw.rect(surface,COLOR["White"],Rect(400,30,150,150))
+    # 黒色で白の四角形を塗りつぶす
+    pygame.draw.rect(surface,COLOR["Black"],Rect(405,35,140,140))
+    # 文字を描画する領域を黒に塗りつぶす
+    pygame.draw.rect(surface,COLOR["Black"],Rect(420,30,70,10))
+    font = pygame.font.Font(None,30)
+    text = font.render("NEXT",True,COLOR["White"])
+    surface.blit(text,[430,20])
+    for block in next_block.shape:
+        pygame.draw.rect(surface,COLOR["Black"],Rect(452+25*block[1],105+25*block[0],25,25))
+        pygame.draw.rect(surface,COLOR[BLOCK_COLOR[next_block.block_type]],Rect(455+25*block[1],107+25*block[0],21,21))
 # ゲーム終了関数
 def game_exit():
     pygame.quit()
@@ -217,6 +230,7 @@ def main():
                     game_exit()
         block.drop(board)
         row_delete(board)
+        draw_next_block(surface,next_block)
         board_draw(surface,board)
         block.draw(surface)
         pygame.display.update()
